@@ -1,0 +1,62 @@
+const express = require('express')
+const mongoose = require('mongoose')
+const Item = require('./models/items')
+const app = express()
+app.use(express.urlencoded({ extended: true }))
+const mangodb =
+  'mongodb+srv://Nipun:Nipun123@cluster0.iqimr.mongodb.net/item-database?retryWrites=true&w=majority'
+app.set('view engine', 'ejs')
+mongoose
+  .connect(mangodb)
+  .then(() => console.log('connected'), app.listen(3000))
+  .catch((err) => console.log(err))
+
+app.get('/', (req, res) => {
+  res.redirect('/get-item')
+})
+
+app.get('/get-item', (req, res) => {
+  Item.find()
+    .then((result) => {
+      res.render('index', { items: result })
+    })
+    .catch((err) => console.log(err))
+})
+
+app.get('/add-item', (req, res) => {
+  res.render('add-item')
+})
+
+app.post('/items', (req, res) => {
+  console.log(req.body)
+  const item = Item(req.body)
+  item
+    .save()
+    .then(() => res.redirect('/get-item'))
+    .catch((err) => console.log(err))
+})
+
+app.get('/items/:id', (req, res) => {
+  const id = req.params.id
+  Item.findById(id).then((result) => {
+    console.log('result', result)
+    res.render('item-detail', { item: result })
+  })
+})
+
+app.delete('/items/:id', (req, res) => {
+  const id = req.params.id
+  Item.findByIdAndDelete(id).then((result) => {
+    res.json({ redirect: '/get-item' })
+  })
+})
+app.put('/items/:id', (req, res) => {
+  const id = req.params.id
+  Item.findByIdAndUpdate(id, req.body).then(() => {
+    res.json({ msg: 'update sucessfully' })
+  })
+})
+
+app.use((req, res) => {
+  res.render('error')
+})
